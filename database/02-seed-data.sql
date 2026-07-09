@@ -34,3 +34,11 @@ BEGIN
     WHERE c.Email = N'bob@example.com' AND l.Status = N'Active';
 END
 GO
+
+-- Demo: one active loan past due date so BackgroundService has data to show
+UPDATE l
+SET DueDate = DATEADD(day, -14, CAST(GETDATE() AS DATE))
+FROM dbo.Loans l
+INNER JOIN dbo.Customers c ON c.CustomerId = l.CustomerId
+WHERE c.Email = N'bob@example.com' AND l.Status = N'Active';
+GO

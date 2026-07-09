@@ -1,0 +1,75 @@
+@page "/overdue-alerts"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = LoanPortal.Web.Data.IdentitySeedData.OfficerRole)]
+
+@using LoanPortal.Web.Services
+
+@inject OverdueLoanAlertStore AlertStore
+
+<PageTitle>Overdue alerts</PageTitle>
+
+<h1>Overdue loan alerts</h1>
+
+<p class="text-muted">
+    A <strong>BackgroundService</strong> checks every hour for active loans past their due date.
+    Results appear here and in the application log.
+</p>
+
+<button class="btn btn-outline-primary mb-3" @onclick="Refresh">Refresh</button>
+
+@if (alerts.Count == 0)
+{
+    <p>No overdue loans in the latest background check (or wait ~10 seconds after app start).</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Loan</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Due</th>
+                <th>Checked (UTC)</th>
+                <th>Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var alert in alerts)
+            {
+                <tr>
+                    <td>@alert.LoanId</td>
+                    <td>@alert.CustomerName</td>
+                    <td>@alert.Amount.ToString("C")</td>
+                    <td>@alert.DueDate.ToString("d")</td>
+                    <td>@alert.CheckedAtUtc.ToString("g")</td>
+                    <td>@alert.Message</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5>Study note</h5>
+        <p class="mb-0">
+            See <code>Background/OverdueLoanBackgroundService.cs</code>.
+            Hosted services run inside the web app without a user clicking anything — useful for nightly reports and reminders.
+        </p>
+    </div>
+</div>
+
+@code {
+    private IReadOnlyList<OverdueAlertEntry> alerts = Array.Empty<OverdueAlertEntry>();
+
+    protected override void OnInitialized()
+    {
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        alerts = AlertStore.GetLatest();
+    }
+}

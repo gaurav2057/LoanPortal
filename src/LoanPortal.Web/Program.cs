@@ -3,6 +3,8 @@ using LoanPortal.Api.Repositories;
 using LoanPortal.Web.Components;
 using LoanPortal.Web.Components.Account;
 using LoanPortal.Web.Data;
+using LoanPortal.Web.Background;
+using LoanPortal.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +57,9 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<ILoanRepository, LoanRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<DatabaseBootstrapper>();
+builder.Services.AddScoped<SecurityDemoService>();
+builder.Services.AddSingleton<OverdueLoanAlertStore>();
+builder.Services.AddHostedService<OverdueLoanBackgroundService>();
 
 var app = builder.Build();
 

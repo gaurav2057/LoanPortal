@@ -2,25 +2,38 @@
 
 <PageTitle>Loan Portal</PageTitle>
 
-<h1>Loan Portal</h1>
+<h1>Loan Portal — complete study project</h1>
 
 <p>
-    Blazor <strong>Server</strong> website with <strong>ASP.NET Core Identity</strong> for login and roles.
-    Loan data is stored in <strong>SQL Server</strong> and accessed with <strong>Dapper</strong>.
+    Full-stack .NET demo: <strong>Blazor Server</strong>, <strong>ASP.NET Core Identity</strong>,
+    <strong>SQL Server</strong>, <strong>Dapper</strong>, <strong>REST API</strong>,
+    <strong>OWASP security demo</strong>, and <strong>BackgroundService</strong>.
 </p>
 
 <div class="card mb-3">
     <div class="card-body">
-        <h5 class="card-title">Demo logins (seeded on first run)</h5>
-        <ul>
-            <li><strong>Officer:</strong> officer@bank.com / Officer@123 — can approve pending loans</li>
-            <li><strong>Customer:</strong> alice@example.com / Customer@123 — sees own loans and pays</li>
-        </ul>
-        <p class="mb-0 text-muted">Use Account → Login, then open the Loans page.</p>
+        <h5 class="card-title">How to study (start here)</h5>
+        <ol>
+            <li>Read <code>docs/BEGINNER-STUDY-PATH.md</code> — week-by-week from basics</li>
+            <li>Read <code>docs/STUDY-GUIDE.md</code> — what each file does</li>
+            <li>Run this app, login, click every menu item</li>
+            <li>Open the same file in code while you click</li>
+        </ol>
     </div>
 </div>
 
-<p>
-    <a class="btn btn-primary" href="loans">Go to Loans</a>
-    <a class="btn btn-outline-secondary ms-2" href="Account/Login">Login</a>
-</p>
+<div class="card mb-3">
+    <div class="card-title card-body"><h5>Demo logins</h5>
+        <ul>
+            <li><strong>Officer:</strong> officer@bank.com / Officer@123</li>
+            <li><strong>Customer:</strong> alice@example.com / Customer@123</li>
+        </ul>
+    </div>
+</div>
+
+<div class="row g-2">
+    <div class="col-auto"><a class="btn btn-primary" href="loans">Loans</a></div>
+    <div class="col-auto"><a class="btn btn-outline-primary" href="Account/Login">Login</a></div>
+    <div class="col-auto"><a class="btn btn-outline-secondary" href="overdue-alerts">Overdue (Officer)</a></div>
+    <div class="col-auto"><a class="btn btn-outline-secondary" href="security-demo">Security (Officer)</a></div>
+</div>

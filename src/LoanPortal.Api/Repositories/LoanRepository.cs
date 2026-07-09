@@ -7,6 +7,7 @@ namespace LoanPortal.Api.Repositories;
 public interface ILoanRepository
 {
     Task<IReadOnlyList<LoanSummary>> GetAllAsync();
+    Task<IReadOnlyList<LoanSummary>> GetOverdueAsync();
     Task<LoanDetail?> GetDetailAsync(int loanId);
     Task<int> CreateAsync(CreateLoanRequest request);
     Task<bool> ApproveAsync(int loanId);
@@ -38,6 +39,31 @@ public class LoanRepository : ILoanRepository
             LEFT JOIN dbo.Payments p ON p.LoanId = l.LoanId
             GROUP BY l.LoanId, l.CustomerId, c.Name, l.Amount, l.Status, l.DueDate, l.CreatedAt
             ORDER BY l.LoanId;
+            """;
+
+        await using var connection = _connectionFactory.CreateConnection();
+        var rows = await connection.QueryAsync<LoanSummary>(sql);
+        return rows.ToList();
+    }
+
+    public async Task<IReadOnlyList<LoanSummary>> GetOverdueAsync()
+    {
+        const string sql = """
+            SELECT
+                l.LoanId,
+                l.CustomerId,
+                c.Name AS CustomerName,
+                l.Amount,
+                l.Status,
+                l.DueDate,
+                l.CreatedAt,
+                ISNULL(SUM(p.Amount), 0) AS TotalPaid
+            FROM dbo.Loans l
+            INNER JOIN dbo.Customers c ON c.CustomerId = l.CustomerId
+            LEFT JOIN dbo.Payments p ON p.LoanId = l.LoanId
+            WHERE l.Status = N'Active' AND l.DueDate < CAST(GETDATE() AS DATE)
+            GROUP BY l.LoanId, l.CustomerId, c.Name, l.Amount, l.Status, l.DueDate, l.CreatedAt
+            ORDER BY l.DueDate;
             """;
 
         await using var connection = _connectionFactory.CreateConnection();

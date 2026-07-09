@@ -1,108 +1,141 @@
-# Study guide — read this file by file
+# Study guide — file by file
 
-Use this while exploring the repo. Say each section aloud for demo practice.
-
----
-
-## 1. `database/01-create-tables.sql`
-
-**What:** Creates Customers, Loans, Payments tables.  
-**Why:** Data must live in SQL Server, not in C# memory.  
-**Key ideas:** Primary key, foreign key, CHECK constraint on Status.  
-**Demo line:** "Loans reference CustomerId — that is normalization."
+Use with `docs/BEGINNER-STUDY-PATH.md` for week order. This file explains **what each part does**.
 
 ---
 
-## 2. `database/02-seed-data.sql`
+## Database
 
-**What:** Inserts Alice, Bob, Carol and sample loans.  
-**Why:** Swagger demo works immediately.  
-**Demo line:** "Alice has a Pending loan — we will approve it live."
+### `database/01-create-tables.sql`
 
----
+Creates `Customers`, `Loans`, `Payments`. Foreign keys link loans to customers and payments to loans. `Status` has a CHECK constraint.
 
-## 3. `docker-compose.yml`
+### `database/02-seed-data.sql`
 
-**What:** Runs SQL Server in Docker on port 1433.  
-**Why:** Same engine your company uses, no full Windows install required.  
-**Command:** `docker compose up -d`
+Inserts Alice, Bob, Carol and sample loans. Updates Bob's active loan to a **past due date** so the background service has demo data.
 
 ---
 
-## 4. `Models/*.cs`
+## API project (`src/LoanPortal.Api`)
 
-**What:** C# classes matching table columns.  
-**Why:** Dapper maps SQL rows to objects.  
-**Demo line:** "LoanId property maps to LoanId column."
+### `Models/*.cs`
+
+C# types matching SQL columns. Dapper maps query results to these classes.
+
+### `Data/SqlConnectionFactory.cs`
+
+Reads `ConnectionStrings:DefaultConnection` from `appsettings.json` and opens `SqlConnection`.
+
+### `Data/DatabaseBootstrapper.cs`
+
+On startup: create database if needed, run `01` and `02` SQL scripts. Shared by Web and Api.
+
+### `Repositories/*.cs`
+
+Parameterized SQL via Dapper. **Always** use `@ParameterName`, never string concatenation for user input.
+
+Key method: `LoanRepository.GetOverdueAsync()` — active loans where `DueDate < today`.
+
+### `Controllers/*.cs`
+
+| Controller | Purpose |
+|------------|---------|
+| CustomersController | List customers |
+| LoansController | List, create, approve loans |
+| PaymentsController | Record payments |
+| DemoController | API unsafe vs safe search |
+
+### `Program.cs`
+
+Registers repositories, Swagger, bootstrap on startup.
 
 ---
 
-## 5. `Data/SqlConnectionFactory.cs`
+## Web project (`src/LoanPortal.Web`) — main app
 
-**What:** Reads connection string from appsettings.json.  
-**Why:** One place to configure database; injected everywhere.  
-**Demo line:** "Connection string points to localhost SQL Server."
+### `Program.cs`
+
+- Blazor Server (`AddInteractiveServerComponents`)
+- Identity + SQL Server EF store
+- Roles: Officer, Customer
+- Dapper repositories (same as API)
+- `SecurityDemoService`, `OverdueLoanAlertStore`, `OverdueLoanBackgroundService`
+
+### `Data/ApplicationDbContext.cs`
+
+EF Core context for **Identity only** (users, roles, logins). Business data uses Dapper.
+
+### `Data/IdentitySeedData.cs`
+
+Creates roles, officer and customer users, links `alice@example.com` to customer record.
+
+### `Components/Pages/Home.razor`
+
+Landing page with study links and demo logins.
+
+### `Components/Pages/Loans.razor`
+
+Main business UI: list loans, officer approve, customer pay.
+
+### `Components/Pages/SecurityDemo.razor`
+
+Officer-only OWASP lab: unsafe string SQL vs safe Dapper parameters.
+
+### `Components/Pages/OverdueAlerts.razor`
+
+Officer-only view of latest background check results.
+
+### `Services/SecurityDemoService.cs`
+
+Implements unsafe and safe customer search for teaching.
+
+### `Services/OverdueLoanAlertStore.cs`
+
+In-memory store of latest overdue check (singleton).
+
+### `Background/OverdueLoanBackgroundService.cs`
+
+`BackgroundService` — first run after 10 seconds, then every hour. Logs and updates alert store.
+
+### `Components/Layout/NavMenu.razor`
+
+Navigation; officer-only links wrapped in `AuthorizeView Roles="Officer"`.
+
+### `Components/Account/*`
+
+Scaffolded Identity UI: Login, Register, Manage.
 
 ---
 
-## 6. `Data/DatabaseBootstrapper.cs`
+## Configuration
 
-**What:** On startup, creates DB and runs SQL scripts.  
-**Why:** You do not need SSMS for first run.  
-**Demo line:** "App self-initializes schema for local dev."
+### `appsettings.json` (Web and Api)
 
----
-
-## 7. `Repositories/*.cs`
-
-**What:** SQL queries using Dapper.  
-**Why:** Controllers stay thin; SQL stays in one layer.  
-**Key line to show:**
-
-```csharp
-WHERE LoanId = @LoanId
+```text
+Server=(localdb)\mssqllocaldb;Database=LoanPortal;Trusted_Connection=True;TrustServerCertificate=True;
 ```
 
-**Demo line:** "@LoanId is a parameter — safe from SQL injection."
+Change server name if using SQL Express — see `docs/SQL-SERVER-SETUP.md`.
 
 ---
 
-## 8. `Controllers/*.cs`
+## Practice order (quick)
 
-**What:** HTTP endpoints — URL to C# method.  
-**Why:** REST API for browsers, Swagger, future Blazor.  
-
-| Controller | Role |
-|------------|------|
-| CustomersController | GET customers |
-| LoansController | GET/POST loans, approve |
-| PaymentsController | POST payment |
-| DemoController | unsafe vs safe search |
-
-**Demo line:** "GET reads data; POST creates or changes state."
+1. SQL scripts
+2. One model + one repository
+3. `LoansController` or `Loans.razor`
+4. Identity seed + login
+5. Security demo + background service
+6. Full demo from `docs/DEMO-SCRIPT.md`
 
 ---
 
-## 9. `Program.cs`
+## Interview one-liners
 
-**What:** App entry point — DI registration, Swagger, bootstrap.  
-**Why:** ASP.NET Core pipeline starts here.  
-**Demo line:** "I register ILoanRepository so the controller gets it automatically."
-
----
-
-## 10. `appsettings.json`
-
-**What:** Connection strings and logging.  
-**Why:** Config outside code.  
-**Note:** Dev password only — use secrets in real production.
-
----
-
-## Practice order
-
-1. Read SQL scripts  
-2. Read Models  
-3. Read one Repository + matching Controller  
-4. Read Program.cs  
-5. Run app and match Swagger calls to code paths
+| Topic | Line |
+|-------|------|
+| Blazor | "Server-side rendering with SignalR — not WebAssembly." |
+| Identity | "Built-in auth with roles; Identity tables in SQL Server via EF." |
+| Data | "Business queries use Dapper; Identity uses EF Core." |
+| Security | "All production SQL uses parameters; unsafe code is isolated for demo." |
+| Background | "Hosted service checks overdue loans on a timer and logs reminders." |

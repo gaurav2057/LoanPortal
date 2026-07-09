@@ -24,6 +24,21 @@
             </NavLink>
         </div>
 
+        <AuthorizeView Roles="Officer">
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="overdue-alerts">
+                        <span class="bi bi-exclamation-triangle-nav-menu" aria-hidden="true"></span> Overdue alerts
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="security-demo">
+                        <span class="bi bi-shield-lock-nav-menu" aria-hidden="true"></span> Security demo
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
         <AuthorizeView>
             <Authorized>
                 <div class="nav-item px-3">

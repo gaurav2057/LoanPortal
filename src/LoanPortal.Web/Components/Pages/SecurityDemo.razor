@@ -1,0 +1,84 @@
+@page "/security-demo"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = LoanPortal.Web.Data.IdentitySeedData.OfficerRole)]
+
+@using LoanPortal.Api.Models
+@using LoanPortal.Web.Services
+
+@inject SecurityDemoService DemoService
+
+<PageTitle>Security demo</PageTitle>
+
+<h1>SQL injection lesson (OWASP)</h1>
+
+<p class="text-muted">
+    This page is for learning only. It shows why we never concatenate user input into SQL strings.
+    Production code in this project always uses Dapper parameters.
+</p>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Customer email</label>
+        <input class="form-control" @bind="searchEmail" />
+    </div>
+    <div class="col-md-6 d-flex align-items-end gap-2">
+        <button class="btn btn-danger" @onclick="RunUnsafeAsync">Unsafe search</button>
+        <button class="btn btn-success" @onclick="RunSafeAsync">Safe search</button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(note))
+{
+    <div class="alert alert-warning">@note</div>
+}
+
+@if (results.Count > 0)
+{
+    <table class="table table-sm">
+        <thead>
+            <tr><th>Id</th><th>Name</th><th>Email</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var row in results)
+            {
+                <tr>
+                    <td>@row.CustomerId</td>
+                    <td>@row.Name</td>
+                    <td>@row.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h5>What to say in demo</h5>
+        <ul>
+            <li><strong>Unsafe:</strong> builds SQL as a string — attacker can inject extra SQL.</li>
+            <li><strong>Safe:</strong> uses <code>@@Email</code> parameter — input is data only, not code.</li>
+            <li>Try email: <code>alice@example.com</code> on both buttons — same result.</li>
+            <li>Try malicious input only in local lab: <code>' OR '1'='1</code> — unsafe may return extra rows.</li>
+        </ul>
+    </div>
+</div>
+
+@code {
+    private string searchEmail = "alice@example.com";
+    private readonly List<Customer> results = new();
+    private string? note;
+
+    private async Task RunUnsafeAsync()
+    {
+        results.Clear();
+        note = "Ran UNSAFE query (string concatenation). Do not use this pattern in real apps.";
+        results.AddRange(await DemoService.UnsafeSearchAsync(searchEmail));
+    }
+
+    private async Task RunSafeAsync()
+    {
+        results.Clear();
+        note = "Ran SAFE query (Dapper parameter @Email). This is how repositories work in this project.";
+        results.AddRange(await DemoService.SafeSearchAsync(searchEmail));
+    }
+}

@@ -20,7 +20,11 @@
 mono_crash.*
 
 # Build results
-[Dd]ebug/
+# SQLite leftovers (project uses SQL Server)
+*.db
+*.db-shm
+*.db-wal
+
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/

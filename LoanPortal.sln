@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F35069CE-8DE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoanPortal.Api", "src\LoanPortal.Api\LoanPortal.Api.csproj", "{9B88E72F-EBC2-472D-BAB4-A9B97F6569BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoanPortal.Web", "src\LoanPortal.Web\LoanPortal.Web.csproj", "{36285101-175C-416A-9E5B-B20695A57011}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +22,13 @@ Global
 		{9B88E72F-EBC2-472D-BAB4-A9B97F6569BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B88E72F-EBC2-472D-BAB4-A9B97F6569BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B88E72F-EBC2-472D-BAB4-A9B97F6569BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36285101-175C-416A-9E5B-B20695A57011}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36285101-175C-416A-9E5B-B20695A57011}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36285101-175C-416A-9E5B-B20695A57011}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36285101-175C-416A-9E5B-B20695A57011}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9B88E72F-EBC2-472D-BAB4-A9B97F6569BA} = {F35069CE-8DE5-45EE-912E-386C7014F976}
+		{36285101-175C-416A-9E5B-B20695A57011} = {F35069CE-8DE5-45EE-912E-386C7014F976}
 	EndGlobalSection
 EndGlobal

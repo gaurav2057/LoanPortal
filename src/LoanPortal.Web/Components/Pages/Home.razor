@@ -1,0 +1,26 @@
+﻿@page "/"
+
+<PageTitle>Loan Portal</PageTitle>
+
+<h1>Loan Portal</h1>
+
+<p>
+    Blazor <strong>Server</strong> website with <strong>ASP.NET Core Identity</strong> for login and roles.
+    Loan data is stored in <strong>SQL Server</strong> and accessed with <strong>Dapper</strong>.
+</p>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Demo logins (seeded on first run)</h5>
+        <ul>
+            <li><strong>Officer:</strong> officer@bank.com / Officer@123 — can approve pending loans</li>
+            <li><strong>Customer:</strong> alice@example.com / Customer@123 — sees own loans and pays</li>
+        </ul>
+        <p class="mb-0 text-muted">Use Account → Login, then open the Loans page.</p>
+    </div>
+</div>
+
+<p>
+    <a class="btn btn-primary" href="loans">Go to Loans</a>
+    <a class="btn btn-outline-secondary ms-2" href="Account/Login">Login</a>
+</p>

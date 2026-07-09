@@ -1,124 +1,112 @@
 # Loan Portal
 
-A learning and demo project: **customers**, **loans**, and **payments** managed through an **ASP.NET Core Web API** with **Dapper** and **SQL Server**.
+Loan management demo for GitHub and live presentation: **Blazor Server** website, **ASP.NET Core Identity**, **Dapper**, and **SQL Server** (SSMS / LocalDB — **no Docker**).
 
-**Author:** [gaurav2057](https://github.com/gaurav2057)
+**GitHub:** [gaurav2057/LoanPortal](https://github.com/gaurav2057/LoanPortal)
+
+## Mentor requirements (implemented)
+
+| Requirement | Implementation |
+|-------------|----------------|
+| Blazor **Server** | `LoanPortal.Web` — interactive server render mode |
+| Not WebAssembly | No `blazorwasm` project |
+| **ASP.NET Core Identity** | Built-in Identity with roles (not custom auth) |
+| SQL Server | LocalDB or SSMS — see `docs/SQL-SERVER-SETUP.md` |
+| GitHub | Push from `/home/aurav_ingh/LoanPortal` |
 
 ## Tech stack
 
 | Layer | Technology |
 |-------|------------|
-| API | ASP.NET Core 8 Web API |
+| UI | Blazor Server (.NET 8) |
+| Auth | ASP.NET Core Identity + roles |
+| API (optional) | ASP.NET Core Web API + Swagger |
 | Data access | Dapper (parameterized SQL) |
-| Database | SQL Server 2022 (Docker) |
-| API testing UI | Swagger |
-
-## Features (Phase 1)
-
-- List customers and loans (SQL JOIN with payment totals)
-- Create loans (status starts as `Pending`)
-- Approve loans (`Pending` → `Active`)
-- Record payments
-- Demo endpoints: unsafe vs safe SQL search (OWASP injection lesson)
+| Database | SQL Server (LocalDB / Express / SSMS) |
 
 ## Project structure
 
 ```
 LoanPortal/
-├── database/           # SQL scripts (tables + seed data)
-├── docker-compose.yml  # SQL Server container
-├── docs/               # Architecture + demo script
-└── src/LoanPortal.Api/
-    ├── Controllers/    # HTTP endpoints
-    ├── Repositories/   # Dapper + SQL
-    ├── Models/         # C# classes matching tables
-    └── Data/           # Connection factory + DB bootstrap
+├── database/              # SQL scripts for Customers, Loans, Payments
+├── docs/                  # Setup, demo script, architecture
+├── src/
+│   ├── LoanPortal.Web/    # Main app — Blazor Server + Identity (run this)
+│   └── LoanPortal.Api/    # REST API + Swagger (optional separate demo)
 ```
 
 ## Prerequisites
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- [Docker](https://www.docker.com/) (for SQL Server)
+- [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) + [SSMS](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms)
+- Visual Studio 2022 or VS Code (optional)
 
-## Quick start
+**No Docker required.**
 
-### 1. Start SQL Server
+## Quick start (Windows)
+
+### 1. SQL Server
+
+Use **LocalDB** (default) or see `docs/SQL-SERVER-SETUP.md` for SQL Express.
+
+### 2. Run the website
 
 ```bash
-cd LoanPortal
-docker compose up -d
+cd src/LoanPortal.Web
+dotnet run
 ```
 
-Wait ~30 seconds for SQL Server to be ready.
+Open the HTTPS URL shown in the terminal (e.g. `https://localhost:7xxx`).
 
-### 2. Run the API
+### 3. Login and demo
+
+| Role | Email | Password | Can do |
+|------|-------|----------|--------|
+| Officer | officer@bank.com | Officer@123 | Approve pending loans |
+| Customer | alice@example.com | Customer@123 | View own loans, pay |
+
+Go to **Loans** after login.
+
+### 4. Optional — API + Swagger
 
 ```bash
-export PATH="$HOME/.dotnet:$PATH"   # if dotnet installed to ~/.dotnet
 cd src/LoanPortal.Api
 dotnet run
 ```
 
-### 3. Open Swagger
+Open `/swagger` for REST endpoints.
 
-Browser: `https://localhost:7xxx/swagger` (port shown in terminal output)
+## Live demo script
 
-## Demo flow (Swagger)
+See `docs/DEMO-SCRIPT.md` and `docs/STUDY-GUIDE.md`.
 
-1. `GET /api/loans` — see Alice (Pending), Bob (Active), Carol (Closed)
-2. `POST /api/loans/{id}/approve` — approve Alice's loan
-3. `GET /api/loans/{id}` — confirm status is Active
-4. `POST /api/payments` — `{ "loanId": 2, "amount": 500 }`
-5. `GET /api/demo/safe-search?email=alice@example.com` — parameterized SQL
+**Say in interview:**
 
-## API endpoints
-
-| Method | URL | Description |
-|--------|-----|-------------|
-| GET | `/api/customers` | All customers |
-| GET | `/api/customers/{id}` | One customer |
-| GET | `/api/loans` | All loans with customer name |
-| GET | `/api/loans/{id}` | Loan + customer + payments |
-| POST | `/api/loans` | Create loan |
-| POST | `/api/loans/{id}/approve` | Approve pending loan |
-| POST | `/api/payments` | Record payment |
-| GET | `/api/demo/unsafe-search` | SQL injection demo (local only) |
-| GET | `/api/demo/safe-search` | Safe parameterized search |
-
-## Connection string
-
-Default in `appsettings.json` (Docker SQL Server):
-
-```
-Server=localhost,1433;Database=LoanPortal;User Id=sa;Password=LoanPortal@123;TrustServerCertificate=True;
-```
-
-**Do not commit real production passwords.** For GitHub this dev password is documented for local learning only.
+> "This is Blazor Server, not WebAssembly. Authentication uses ASP.NET Core Identity with Officer and Customer roles. Loan data is in SQL Server; Dapper runs parameterized queries."
 
 ## Push to GitHub
 
 ```bash
 cd LoanPortal
-git init
 git add .
-git commit -m "Phase 1: Loan Portal API with Dapper and SQL Server"
-git branch -M main
-git remote add origin https://github.com/gaurav2057/LoanPortal.git
-git push -u origin main
+git commit -m "Phase 2: Blazor Server + Identity, no Docker"
+git push origin main
 ```
 
-Create the empty repo on GitHub first: https://github.com/new → name `LoanPortal`
+## Connection string
 
-## What I learned
+Default (LocalDB) in `src/LoanPortal.Web/appsettings.json`:
 
-- SQL tables, foreign keys, JOINs, GROUP BY
-- Dapper `QueryAsync` / `ExecuteAsync` with `@parameters`
-- REST API: GET vs POST, status codes
-- Dependency injection in ASP.NET Core
-- Swagger for testing without a UI
+```
+Server=(localdb)\mssqllocaldb;Database=LoanPortal;Trusted_Connection=True;TrustServerCertificate=True;
+```
 
-## Roadmap
+Change server name in both Web and Api `appsettings.json` if you use SQL Express — details in `docs/SQL-SERVER-SETUP.md`.
 
-- **Phase 2:** Blazor dashboard + role-based approve button
-- **Phase 3:** Expand security lab (injection demos)
-- **Phase 4:** BackgroundService for overdue loan alerts
+## What you learn
+
+- Blazor Server UI (C# in browser via SignalR)
+- ASP.NET Core Identity (login, roles, authorization)
+- Dapper + SQL JOINs
+- REST API (secondary project)
+- SSMS — view tables after first run

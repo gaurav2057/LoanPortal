@@ -1,0 +1,179 @@
+@page "/loans"
+@rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+
+@using LoanPortal.Api.Models
+@using LoanPortal.Api.Repositories
+@using LoanPortal.Web.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+
+@inject ILoanRepository LoanRepository
+@inject ICustomerRepository CustomerRepository
+@inject IPaymentRepository PaymentRepository
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager
+
+<PageTitle>Loans</PageTitle>
+
+<h1>Loan dashboard</h1>
+
+<p class="text-muted">
+    Blazor Server UI with ASP.NET Core Identity.
+    Officers approve pending loans; customers record payments on active loans.
+</p>
+
+@if (!string.IsNullOrEmpty(statusMessage))
+{
+    <div class="alert alert-info">@statusMessage</div>
+}
+
+@if (isLoading)
+{
+    <p>Loading loans...</p>
+}
+else if (visibleLoans.Count == 0)
+{
+    <p>No loans to display for your account.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Due</th>
+                <th>Paid</th>
+                @if (isOfficer)
+                {
+                    <th>Action</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var loan in visibleLoans)
+            {
+                <tr>
+                    <td>@loan.LoanId</td>
+                    <td>@loan.CustomerName</td>
+                    <td>@loan.Amount.ToString("C")</td>
+                    <td>@loan.Status</td>
+                    <td>@loan.DueDate.ToString("d")</td>
+                    <td>@loan.TotalPaid.ToString("C")</td>
+                    @if (isOfficer)
+                    {
+                        <td>
+                            @if (loan.Status == "Pending")
+                            {
+                                <button class="btn btn-sm btn-success" @onclick="() => ApproveAsync(loan.LoanId)">
+                                    Approve
+                                </button>
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (!isOfficer && activeLoanId.HasValue)
+{
+    <hr />
+    <h3>Record payment</h3>
+    <div class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label">Loan #@activeLoanId</label>
+            <input type="number" class="form-control" @bind="paymentAmount" min="1" step="0.01" />
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" @onclick="RecordPaymentAsync">Submit payment</button>
+        </div>
+    </div>
+}
+
+@code {
+    private readonly List<LoanSummary> visibleLoans = new();
+    private bool isLoading = true;
+    private bool isOfficer;
+    private int? activeLoanId;
+    private decimal paymentAmount = 500;
+    private string? statusMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        isOfficer = user.IsInRole(IdentitySeedData.OfficerRole);
+
+        var allLoans = await LoanRepository.GetAllAsync();
+
+        if (isOfficer)
+        {
+            visibleLoans.AddRange(allLoans);
+        }
+        else
+        {
+            var email = user.Identity?.Name;
+            if (!string.IsNullOrEmpty(email))
+            {
+                var customers = await CustomerRepository.GetAllAsync();
+                var customer = customers.FirstOrDefault(c =>
+                    string.Equals(c.Email, email, StringComparison.OrdinalIgnoreCase));
+
+                if (customer is not null)
+                {
+                    visibleLoans.AddRange(allLoans.Where(l => l.CustomerId == customer.CustomerId));
+                    activeLoanId = visibleLoans.FirstOrDefault(l => l.Status == "Active")?.LoanId;
+                }
+            }
+        }
+
+        isLoading = false;
+    }
+
+    private async Task ApproveAsync(int loanId)
+    {
+        if (!isOfficer)
+        {
+            return;
+        }
+
+        var approved = await LoanRepository.ApproveAsync(loanId);
+        statusMessage = approved
+            ? $"Loan {loanId} approved."
+            : $"Could not approve loan {loanId} (not Pending).";
+
+        await RefreshLoansAsync();
+    }
+
+    private async Task RecordPaymentAsync()
+    {
+        if (!activeLoanId.HasValue || paymentAmount <= 0)
+        {
+            statusMessage = "Enter a valid payment amount.";
+            return;
+        }
+
+        var paymentId = await PaymentRepository.CreateAsync(new CreatePaymentRequest
+        {
+            LoanId = activeLoanId.Value,
+            Amount = paymentAmount
+        });
+
+        statusMessage = paymentId > 0
+            ? $"Payment {paymentId} recorded for loan {activeLoanId}."
+            : "Payment failed.";
+
+        await RefreshLoansAsync();
+    }
+
+    private async Task RefreshLoansAsync()
+    {
+        visibleLoans.Clear();
+        await OnInitializedAsync();
+    }
+}
